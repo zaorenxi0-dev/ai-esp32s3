@@ -1,0 +1,20 @@
+# ---- ESP-IDF 构建产物 ----
+build/
+build.stale/
+sdkconfig.old
+
+# 依赖组件由 idf.py reconfigure 依据 dependencies.lock 自动还原，不入库
+managed_components/
+
+# ---- 编辑器 / 工具 ----
+.vscode/
+.idea/
+.workbuddy/
+__pycache__/
+*.pyc
+*.pyo
+
+# ---- 系统 ----
+Thumbs.db
+desktop.ini
+.DS_Store
