@@ -1,0 +1,16 @@
+# ESP-IDF Partition Table
+# Name,   Type, SubType, Offset,   Size,     Flags
+# 布局说明（8MB Flash，0x000000 - 0x800000）：
+#   assets 从原 0x1E0000(1.875MB) 缩到 0x100000(1MB)：该分区当前没有任何数据
+#   （启动日志一直报 "Asset index.json not found"），缩小无影响。
+#   腾出的空间给下面的 model 分区 —— ESP-SR 的唤醒词/命令词模型必须放在
+#   名为 "model" 的分区里（CONFIG_MODEL_IN_FLASH=y），否则
+#   esp_srmodel_init("model") 失败，wake_word_ 为 nullptr，
+#   表现为 "Wake word is not initialized"、设备无法语音唤醒。
+nvs,      data, nvs,     0x9000,    0x4000,
+otadata,  data, ota,     0xd000,    0x2000,
+phy_init, data, phy,     0xf000,    0x1000,
+ota_0,    app,  ota_0,   0x20000,   0x2F0000,
+ota_1,    app,  ota_1,   0x310000,  0x2F0000,
+assets,   data, spiffs,  0x600000,  0x100000,
+model,    data, spiffs,  0x700000,  0x100000,

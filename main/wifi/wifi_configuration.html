@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>小智 · WiFi 配网</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f2f4f7; color: #1f2329;
+    font-size: 15px; line-height: 1.5;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 16px 14px 40px; }
+  .head { text-align: center; padding: 10px 0 18px; }
+  .head h1 { margin: 0 0 6px; font-size: 20px; font-weight: 600; }
+  .head p { margin: 0; font-size: 13px; color: #8a919e; }
+  .card {
+    background: #fff; border-radius: 14px; padding: 16px;
+    box-shadow: 0 1px 3px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04);
+    margin-bottom: 14px;
+  }
+  .card h2 {
+    margin: 0 0 12px; font-size: 14px; font-weight: 600; color: #4e5969;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card h2 .hint { font-weight: 400; font-size: 12px; color: #a5acb8; }
+
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; color: #4e5969; margin-bottom: 6px; font-weight: 500; }
+  .field input {
+    width: 100%; height: 44px; padding: 0 12px;
+    border: 1px solid #e2e6ec; border-radius: 10px;
+    font-size: 15px; color: #1f2329; background: #fafbfc;
+    outline: none; transition: border-color .15s, background .15s;
+    font-family: inherit;
+  }
+  .field input:focus { border-color: #3370ff; background: #fff; }
+  .pw-row { position: relative; }
+  .pw-row input { padding-right: 62px; }
+  .pw-eye {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    height: 32px; padding: 0 10px; border: 0; border-radius: 8px;
+    background: transparent; color: #3370ff; font-size: 13px; cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn {
+    display: block; width: 100%; height: 46px; border: 0; border-radius: 10px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: opacity .15s, transform .05s;
+    font-family: inherit;
+  }
+  .btn:active { transform: scale(.99); }
+  .btn-primary { background: #3370ff; color: #fff; }
+  .btn-primary:disabled { background: #a9c0ff; cursor: not-allowed; }
+  .btn-ghost { background: #f2f4f7; color: #4e5969; font-weight: 500; }
+
+  .list { max-height: 240px; overflow-y: auto; margin: -4px -4px 4px; }
+  .item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 10px; border-radius: 10px; cursor: pointer;
+  }
+  .item:active { background: #f2f4f7; }
+  .item .name { flex: 1; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item .lock { font-size: 12px; color: #8a919e; flex-shrink: 0; }
+  .empty { text-align: center; color: #a5acb8; font-size: 13px; padding: 18px 0; }
+
+  .bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; flex-shrink: 0; }
+  .bars i { width: 3px; background: #d7dce5; border-radius: 1px; }
+  .bars i:nth-child(1) { height: 4px; }
+  .bars i:nth-child(2) { height: 7px; }
+  .bars i:nth-child(3) { height: 10px; }
+  .bars i:nth-child(4) { height: 13px; }
+  .bars.s1 i:nth-child(1),
+  .bars.s2 i:nth-child(-n+2),
+  .bars.s3 i:nth-child(-n+3),
+  .bars.s4 i { background: #3370ff; }
+
+  .saved-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px; border-radius: 10px; background: #fafbfc; margin-bottom: 8px;
+  }
+  .saved-item .name { flex: 1; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mini {
+    border: 0; background: #fff; border-radius: 8px; height: 30px; padding: 0 10px;
+    font-size: 12px; color: #4e5969; cursor: pointer;
+    box-shadow: 0 0 0 1px #e2e6ec inset; font-family: inherit;
+  }
+  .mini.danger { color: #f54a45; }
+
+  .adv-toggle {
+    width: 100%; border: 0; background: transparent; text-align: left;
+    font-size: 14px; font-weight: 600; color: #4e5969; padding: 4px 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: inherit;
+  }
+  .adv-body { display: none; padding-top: 12px; }
+  .adv-body.open { display: block; }
+  .switch-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 0; font-size: 14px;
+  }
+  .switch-row span { color: #4e5969; }
+  .sw { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+  .sw input { opacity: 0; width: 0; height: 0; }
+  .sw i { position: absolute; inset: 0; background: #d7dce5; border-radius: 999px; transition: .2s; }
+  .sw i:before {
+    content: ""; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px;
+    background: #fff; border-radius: 50%; transition: .2s;
+  }
+  .sw input:checked + i { background: #3370ff; }
+  .sw input:checked + i:before { transform: translateX(18px); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%) translateY(10px);
+    background: rgba(31,35,41,.92); color: #fff; font-size: 13px;
+    padding: 10px 16px; border-radius: 10px; opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s; max-width: 84vw; text-align: center;
+    z-index: 99;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.err { background: rgba(245,74,69,.95); }
+  .step-tip { font-size: 12px; color: #8a919e; margin-top: 10px; text-align: center; }
+  .tip-left { text-align: left; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <h1>小智 WiFi 配网</h1>
+    <p>选择家里的 WiFi 并输入密码，设备会自动连接</p>
+  </div>
+
+  <div class="card">
+    <h2>可用 WiFi <span class="hint" id="scanHint">扫描中…</span></h2>
+    <div class="list" id="wifiList"><div class="empty">正在扫描附近 WiFi…</div></div>
+    <button class="btn btn-ghost" id="btnRefresh" style="height:38px;font-size:13px;margin-top:6px">重新扫描</button>
+  </div>
+
+  <div class="card">
+    <h2>手动填写</h2>
+    <div class="field">
+      <label>WiFi 名称（SSID）</label>
+      <input id="ssid" type="text" placeholder="点击上方列表，或手动输入" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label>WiFi 密码</label>
+      <div class="pw-row">
+        <input id="password" type="password" placeholder="开放网络可留空" autocomplete="off">
+        <button class="pw-eye" id="btnEye" type="button">显示</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="btnSubmit">连接并保存</button>
+    <div class="step-tip">点击后设备会尝试连接，大约需要 10～20 秒</div>
+  </div>
+
+  <div class="card" id="savedCard" style="display:none">
+    <h2>已保存的网络</h2>
+    <div id="savedList"></div>
+  </div>
+
+  <div class="card">
+    <button class="adv-toggle" id="btnAdv">
+      <span>高级设置</span><span id="advArrow">展开</span>
+    </button>
+    <div class="adv-body" id="advBody">
+      <div class="field">
+        <label>OTA 服务器地址</label>
+        <input id="ota_url" type="text" placeholder="http://your-server-ip:8002/xiaozhi/ota/" autocomplete="off" spellcheck="false">
+        <div class="step-tip tip-left">改这里即可换服务器，不用重新编译固件。必须以 /ota/ 结尾。</div>
+      </div>
+      <div class="field">
+        <label>WiFi 发射功率（8～84，越大信号越强也越费电）</label>
+        <input id="max_tx_power" type="number" min="8" max="84" step="1" placeholder="84">
+      </div>
+      <div class="switch-row">
+        <span>记住路由器（BSSID）</span>
+        <label class="sw"><input type="checkbox" id="remember_bssid"><i></i></label>
+      </div>
+      <div class="switch-row">
+        <span>开启省电模式</span>
+        <label class="sw"><input type="checkbox" id="sleep_mode"><i></i></label>
+      </div>
+      <button class="btn btn-ghost" id="btnAdvSave" style="margin-top:10px">保存高级设置</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var toastTimer = null;
+
+  function toast(msg, isErr) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isErr ? ' err' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.className = 'toast'; }, 2600);
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function barsFor(rssi) {
+    var lv = rssi >= -55 ? 4 : rssi >= -67 ? 3 : rssi >= -78 ? 2 : 1;
+    return '<span class="bars s' + lv + '"><i></i><i></i><i></i><i></i></span>';
+  }
+
+  function loadWifi() {
+    $('scanHint').textContent = '扫描中…';
+    fetch('/scan', { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var aps = (data && data.aps) || [];
+        var box = $('wifiList');
+        if (!aps.length) {
+          box.innerHTML = '<div class="empty">暂未扫到 WiFi，可手动填写名称</div>';
+          $('scanHint').textContent = '0 个';
+          return;
+        }
+        var html = '';
+        for (var i = 0; i < aps.length; i++) {
+          var ap = aps[i];
+          var open = (ap.authmode === 0);
+          html += '<div class="item" data-ssid="' + esc(ap.ssid) + '" data-open="' + (open ? 1 : 0) + '">'
+                + '<span class="lock">' + (open ? '○' : '★') + '</span>'
+                + '<span class="name">' + esc(ap.ssid) + '</span>'
+                + barsFor(ap.rssi)
+                + '</div>';
+        }
+        box.innerHTML = html;
+        $('scanHint').textContent = aps.length + ' 个';
+
+        var items = box.querySelectorAll('.item');
+        for (var j = 0; j < items.length; j++) {
+          items[j].addEventListener('click', function () {
+            $('ssid').value = this.getAttribute('data-ssid');
+            var isOpen = this.getAttribute('data-open') === '1';
+            $('password').value = '';
+            $('password').placeholder = isOpen ? '开放网络，无需密码' : '请输入 WiFi 密码';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+        }
+      })
+      .catch(function () {
+        $('scanHint').textContent = '扫描失败';
+        $('wifiList').innerHTML = '<div class="empty">获取列表失败，可直接手动填写</div>';
+      });
+  }
+
+  function loadSaved() {
+    fetch('/saved_list', { cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (list) {
+        if (!list || !list.length) { $('savedCard').style.display = 'none'; return; }
+        $('savedCard').style.display = '';
+        var html = '';
+        for (var i = 0; i < list.length; i++) {
+          html += '<div class="saved-item">'
+                + '<span class="name">' + esc(list[i]) + '</span>'
+                + '<button class="mini" data-act="default" data-i="' + i + '">设默认</button>'
+                + '<button class="mini danger" data-act="del" data-i="' + i + '">删除</button>'
+                + '</div>';
+        }
+        $('savedList').innerHTML = html;
+
+        var btns = $('savedList').querySelectorAll('button');
+        for (var k = 0; k < btns.length; k++) {
+          btns[k].addEventListener('click', function () {
+            var act = this.getAttribute('data-act');
+            var idx = this.getAttribute('data-i');
+            var url = act === 'del'
+              ? '/saved/delete?index=' + idx
+              : '/saved/set_default?index=' + idx;
+            fetch(url, { cache: 'no-store' })
+              .then(function () {
+                toast(act === 'del' ? '已删除' : '已设为默认');
+                loadSaved();
+              })
+              .catch(function () { toast('操作失败', true); });
+          });
+        }
+      })
+      .catch(function () {});
+  }
+
+  function submit() {
+    var ssid = $('ssid').value.trim();
+    var pw = $('password').value;
+    if (!ssid) { toast('请先填写 WiFi 名称', true); return; }
+
+    var btn = $('btnSubmit');
+    btn.disabled = true;
+    btn.textContent = '正在连接…';
+
+    fetch('/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ssid: ssid, password: pw })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (res && res.success) {
+          toast('连接成功，正在保存…');
+          setTimeout(function () { location.href = '/done.html'; }, 800);
+        } else {
+          var err = (res && res.error) || '连接失败';
+          toast(err === 'Invalid password' ? '密码错误或信号太弱，请重试' : err, true);
+          btn.disabled = false;
+          btn.textContent = '连接并保存';
+        }
+      })
+      .catch(function () {
+        toast('请求超时，请重试', true);
+        btn.disabled = false;
+        btn.textContent = '连接并保存';
+      });
+  }
+
+  var advLoaded = false;
+  function toggleAdv() {
+    var body = $('advBody');
+    var isOpen = body.className.indexOf('open') >= 0;
+    body.className = 'adv-body' + (isOpen ? '' : ' open');
+    $('advArrow').textContent = isOpen ? '展开' : '收起';
+
+    if (!isOpen && !advLoaded) {
+      advLoaded = true;
+      fetch('/advanced/config', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (c) {
+          if (!c) return;
+          if (c.ota_url) $('ota_url').value = c.ota_url;
+          if (typeof c.max_tx_power === 'number') $('max_tx_power').value = c.max_tx_power;
+          $('remember_bssid').checked = !!c.remember_bssid;
+          $('sleep_mode').checked = !!c.sleep_mode;
+        })
+        .catch(function () {});
+    }
+  }
+
+  function saveAdv() {
+    var payload = {
+      ota_url: $('ota_url').value.trim(),
+      max_tx_power: parseInt($('max_tx_power').value, 10) || 84,
+      remember_bssid: $('remember_bssid').checked,
+      sleep_mode: $('sleep_mode').checked
+    };
+    fetch('/advanced/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(function (r) {
+        if (r.ok) { toast('高级设置已保存'); }
+        else { toast('保存失败', true); }
+      })
+      .catch(function () { toast('保存失败', true); });
+  }
+
+  $('btnSubmit').addEventListener('click', submit);
+  $('btnRefresh').addEventListener('click', loadWifi);
+  $('btnAdv').addEventListener('click', toggleAdv);
+  $('btnAdvSave').addEventListener('click', saveAdv);
+  $('btnEye').addEventListener('click', function () {
+    var p = $('password');
+    if (p.type === 'password') { p.type = 'text'; this.textContent = '隐藏'; }
+    else { p.type = 'password'; this.textContent = '显示'; }
+  });
+  $('password').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') submit();
+  });
+
+  loadWifi();
+  loadSaved();
+  setInterval(function () {
+    if (document.hidden) return;
+    var ae = document.activeElement;
+    if (ae === $('ssid') || ae === $('password')) return;
+    loadWifi();
+  }, 8000);
+})();
+</script>
+</body>
+</html>
